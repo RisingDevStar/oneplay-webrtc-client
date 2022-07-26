@@ -1,3 +1,4 @@
 {
-  "SIGNALING_SERVER_URL": "http://localhost:9000"
+  "SIGNALING_SERVER_URL": "ws://10.10.13.146:8080/client",
+  "RESTAPI_URL": "http://localhost:9000"
 }

@@ -7,10 +7,10 @@ import config from '../config.json'
 import styles from '../styles/Home.module.css'
 import { Screen } from '../types/restApi'
 import adapter from 'webrtc-adapter'
-import {  } from 'ws'
-
+import { WsMsg } from '../types'
 
 let peerConnection: RTCPeerConnection | null;
+let ws : WebSocket | null
 
 const Home: NextPage = () => {
   const [errMsg, setErrMsg] = useState("")
@@ -20,6 +20,10 @@ const Home: NextPage = () => {
   const [btnTitle, setBtnTitle] = useState("Start")
 
   const remoteVideo = useRef<HTMLVideoElement>(null);
+
+  const sendWSMsg = (data: WsMsg) => {
+    ws?.send(JSON.stringify(data))
+  }
 
   const currentScreenChange : ChangeEventHandler = (evt: ChangeEvent<HTMLSelectElement>) => {
     let value : number = parseInt(evt.currentTarget.value, 10)
@@ -33,7 +37,7 @@ const Home: NextPage = () => {
     const userMediaPromise = (adapter.browserDetails.browser === 'safari') ?
       navigator.mediaDevices.getUserMedia({ video: true }) :
       Promise.resolve(null)
-    
+
     console.log("userMediaPromise")
     console.log(userMediaPromise)
 
@@ -42,15 +46,9 @@ const Home: NextPage = () => {
         console.log('ss', stream)
 
         return startRemoteSession(selectedScreen, stream)
-          .then(pc => {
-            peerConnection = pc
-          })
       })
         .catch(showError)
-        .then(() => {
-          setEnabled(true)
-          setBtnTitle("Stop")
-      })
+
     } else {
       peerConnection.close()
       peerConnection = null
@@ -65,27 +63,24 @@ const Home: NextPage = () => {
     setErrMsg(String(error))
   }
 
-  async function loadScreens() {
-    return axios.get<Screen>(`${config.SIGNALING_SERVER_URL}/api/screens`)
-      .then(res => {
-        return res
-      })
-      .catch(showError)
+  function requestScreen() {
+    sendWSMsg({
+      WSType: "Screen",
+      Screen: 0,
+      SDP: ""
+    })
   }
-  
+
   async function startSession(offer: any, screen: any) {
     console.log("to agent")
     console.log(JSON.stringify({
       offer,
       screen
     }))
-    return axios.post(`${config.SIGNALING_SERVER_URL}/api/session`, {
-      offer,
-      screen
-    }).then(res => {
-      return res
-    }).then(msg => {
-      return msg.data.answer
+    sendWSMsg({
+      WSType: "SDP",
+      Screen: screen,
+      SDP: offer
     })
   }
 
@@ -93,7 +88,7 @@ const Home: NextPage = () => {
     : Promise<any> {
     return new Promise((accept: (value: any) => void, reject: (reason?: any) => void) => {
       pc.onicecandidate = (evt: RTCPeerConnectionIceEvent) => {
-        if (!evt.candidate) {
+        if (!evt.candidate && pc.localDescription) {
           const { sdp: offer } = pc.localDescription
           accept(offer)
         }
@@ -119,7 +114,7 @@ const Home: NextPage = () => {
         console.log("pc.ontrack() evt")
         console.log(evt)
         console.info('ontrack triggered')
-        
+
         if (evt.streams[0] && remoteVideo.current) {
           remoteVideo.current.srcObject = evt.streams[0]
           remoteVideo.current.play()
@@ -134,27 +129,59 @@ const Home: NextPage = () => {
     }).then(offer => {
       console.info("offer");
       console.info(offer);
-      return startSession(offer, screen);
-    }).then(answer => {
-      console.info(answer)
-      return pc.setRemoteDescription(new RTCSessionDescription({
-        sdp: answer,
-        type: 'answer'
-      }))
-    }).then(() => pc)
+      startSession(offer, screen);
+      peerConnection = pc
+    })
   }
 
-  // showError("Error")
+  async function receiveAnswer(answer: string) {
+    if (peerConnection) {
+      peerConnection.setRemoteDescription(new RTCSessionDescription({
+          sdp: answer,
+          type: 'answer'
+      })).then(() => {
+          setEnabled(true)
+          setBtnTitle("Stop")
+      })
+    }
+  }
+
   useEffect(() => {
-    loadScreens().then((response: AxiosResponse<Screen, any> | void) => {
-      // response.screens.foreach(screen)
-      if (response) {
-        setScreens(response.data.screens)
-        console.log(response.data.screens)
+    ws = new WebSocket(config.SIGNALING_SERVER_URL)
+
+    ws.onopen = (evt: Event) => {
+      console.log("ws connected")
+      requestScreen()
+    }
+
+    ws.onclose = (evt: CloseEvent) => {
+      console.log("ws disconnected")
+    }
+
+    ws.onmessage = (evt: MessageEvent<any>) => {
+      console.log(evt.data)
+      let received: WsMsg = JSON.parse(evt.data)
+      switch (received.WSType) {
+        case "Screen":
+          console.log(received.Screen)
+          setScreens(received.Screen)
+          break
+        case "SDP":
+          let answer = received.Answer
+          if (answer) {
+            receiveAnswer(answer)
+          }
       }
-      return response
-    })
+    }
+
+    ws.onerror = (evt: Event) => {
+      console.log(evt)
+    }
+
     return function cleanup() {
+      if (ws) {
+        ws.close()
+      }
       if (peerConnection) {
         peerConnection.close()
         peerConnection = null
@@ -173,7 +200,6 @@ const Home: NextPage = () => {
         <div className={styles.error}>{ errMsg }</div>
         <select
           className={styles.screenSelect}
-          // onChange={currentScreenChange}
           onChange={ currentScreenChange } value={ selectedScreen }
         >
           {screens.map(({ index } : { index : number}) => (
