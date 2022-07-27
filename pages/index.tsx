@@ -248,6 +248,7 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
 }
 
 export const getStaticProps: GetStaticProps = async (context) => {
+  console.log(`signaling server: ${process.env.SIGNALING_SERVER}`)
   return { props: { signaling_url:  process.env.SIGNALING_SERVER ? process.env.SIGNALING_SERVER : ""}}
 }
 
