@@ -4,7 +4,7 @@ import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import adapter from 'webrtc-adapter'
 import type { WsMsg } from '../types'
-import { SCREENINFO, SDPEXCHANGE } from '../types'
+import { WSType } from '../types'
 import { iceServers, SIGNALING_URL } from '../config/index'
 
 let peerConnection: RTCPeerConnection | null;
@@ -66,7 +66,7 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
       screen
     }))
     sendWSMsg({
-      WSType: SDPEXCHANGE,
+      WSType: WSType.SDP,
       Screen: screen,
       SDP: offer
     })
@@ -137,7 +137,7 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
   useEffect(() => {
     function requestScreen() {
       sendWSMsg({
-        WSType: SCREENINFO,
+        WSType: WSType.SCREEN,
         Screen: 0,
         SDP: ""
       })
@@ -158,15 +158,18 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
       console.log(evt.data)
       let received: WsMsg = JSON.parse(evt.data)
       switch (received.WSType) {
-        case SCREENINFO:
+        case WSType.SCREEN:
           console.log(received.Screen)
           setScreens(received.Screen)
           break
-        case SDPEXCHANGE:
+        case WSType.SDP:
           let answer = received.Answer
           if (answer) {
             receiveAnswer(answer)
           }
+          break
+        case WSType.ERROR:
+          showError(received.Data)
           break
         default:
           console.error(`unknown WSType: ${received.WSType}`)

@@ -28,6 +28,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "sass": "^1.54.0",
+    "serve": "^14.0.1",
     "tls": "^0.0.1",
     "utf-8-validate": "^5.0.9",
     "webrtc-adapter": "^8.1.1",

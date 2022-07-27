@@ -2,11 +2,16 @@ export interface WsMsg {
   WSType: string,
   Screen: any,
   SDP?: string,
-  Answer?: string
+  Answer?: string,
+  Data?: string
 }
 
-export const SCREENINFO = 'Screen'
-export const SDPEXCHANGE = 'SDP'
+export const WSType = {
+  SCREEN: "Screen",
+  SDP: "SDP",
+  ERROR: "Error"
+}
+
 // export interface ScreenInfo {
 //   WSType: string,
 //   Screen: Array<any>

@@ -1,6 +1,6 @@
 import { Screen } from "./restApi"
 import { Peer } from "./peer"
-import { WsMsg, SCREENINFO, SDPEXCHANGE } from "./ws"
+import { WsMsg, WSType } from "./ws"
 
 export type {
   Screen,
@@ -9,6 +9,5 @@ export type {
 }
 
 export {
-  SCREENINFO,
-  SDPEXCHANGE
+  WSType
 }
