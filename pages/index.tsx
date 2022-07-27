@@ -1,18 +1,16 @@
-import type { NextPage } from 'next'
+import type { GetStaticProps, NextPage } from 'next'
 import React, { useState, useEffect, useRef, ChangeEvent, ChangeEventHandler } from 'react'
 import Head from 'next/head'
-import Image from 'next/image'
-import axios, { AxiosResponse } from 'axios'
-import config from '../config.json'
 import styles from '../styles/Home.module.css'
-import { Screen } from '../types/restApi'
 import adapter from 'webrtc-adapter'
-import { WsMsg } from '../types'
+import type { WsMsg } from '../types'
+import { SCREENINFO, SDPEXCHANGE } from '../types'
+import { iceServers, SIGNALING_URL } from '../config/index'
 
 let peerConnection: RTCPeerConnection | null;
-let ws : WebSocket | null
+let ws: WebSocket | null
 
-const Home: NextPage = () => {
+const Home = ({signaling_url} : {signaling_url: string}) => {
   const [errMsg, setErrMsg] = useState("")
   const [selectedScreen, setSelectedScreen] = useState(0)
   const [screens, setScreens] = useState([])
@@ -45,7 +43,7 @@ const Home: NextPage = () => {
       userMediaPromise.then((stream: any) => {
         console.log('ss', stream)
 
-        return startRemoteSession(selectedScreen, stream)
+        return startRemoteSession(selectedScreen, stream, iceServers)
       })
         .catch(showError)
 
@@ -57,18 +55,8 @@ const Home: NextPage = () => {
     }
   }
 
-
-
   const showError = (error: any) => {
     setErrMsg(String(error))
-  }
-
-  function requestScreen() {
-    sendWSMsg({
-      WSType: "Screen",
-      Screen: 0,
-      SDP: ""
-    })
   }
 
   async function startSession(offer: any, screen: any) {
@@ -78,7 +66,7 @@ const Home: NextPage = () => {
       screen
     }))
     sendWSMsg({
-      WSType: "SDP",
+      WSType: SDPEXCHANGE,
       Screen: screen,
       SDP: offer
     })
@@ -102,12 +90,12 @@ const Home: NextPage = () => {
     })
   }
 
-  function startRemoteSession(screen: number, stream: MediaStream) {
+  function startRemoteSession(screen: number, stream: MediaStream, iceServers: RTCIceServer[] | undefined) {
     let pc : RTCPeerConnection;
 
     return Promise.resolve().then(() => {
       pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        iceServers: iceServers
       });
       pc.connectionState
       pc.ontrack = (evt) => {
@@ -147,7 +135,15 @@ const Home: NextPage = () => {
   }
 
   useEffect(() => {
-    ws = new WebSocket(config.SIGNALING_SERVER_URL)
+    function requestScreen() {
+      sendWSMsg({
+        WSType: SCREENINFO,
+        Screen: 0,
+        SDP: ""
+      })
+    }
+
+    ws = new WebSocket(signaling_url)
 
     ws.onopen = (evt: Event) => {
       console.log("ws connected")
@@ -162,15 +158,18 @@ const Home: NextPage = () => {
       console.log(evt.data)
       let received: WsMsg = JSON.parse(evt.data)
       switch (received.WSType) {
-        case "Screen":
+        case SCREENINFO:
           console.log(received.Screen)
           setScreens(received.Screen)
           break
-        case "SDP":
+        case SDPEXCHANGE:
           let answer = received.Answer
           if (answer) {
             receiveAnswer(answer)
           }
+          break
+        default:
+          console.error(`unknown WSType: ${received.WSType}`)
       }
     }
 
@@ -247,5 +246,13 @@ const Home: NextPage = () => {
     </div>
   )
 }
+
+export const getStaticProps: GetStaticProps = async (context) => {
+  return { props: { signaling_url:  process.env.SIGNALING_SERVER ? process.env.SIGNALING_SERVER : ""}}
+}
+
+// export async function getStaticProps() {
+//   // console.log(`env: ${process.env.SIGNALING_SERVER}`)
+// }
 
 export default Home
