@@ -4,7 +4,7 @@ import { debug, DebugType } from '../utils/logs'
 export default function useSocketConnetion(isStarted: boolean) {
   const [state, setState] = useState<{ socket: undefined | WebSocket }>({ socket: undefined });
   useEffect(() => {
-    const socket = new WebSocket(process.env.NEXT_PUBLIC_WEBSOCKET_URL || '');
+    const socket = new WebSocket(process.env.NEXT_PUBLIC_WEBSOCKET_URL || '')
     socket.onopen = () => {
       debug(DebugType.INFO, "socket connected")
       // socket.send("client")
