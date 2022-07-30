@@ -1,26 +1,35 @@
 import type { GetStaticProps, NextPage } from 'next'
-import React, { useState, useEffect, useRef, ChangeEvent, ChangeEventHandler } from 'react'
+import React, { useState, useEffect, useRef, ChangeEvent, ChangeEventHandler, useLayoutEffect } from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import adapter from 'webrtc-adapter'
 import type { WsMsg } from '../types'
 import { WSType } from '../types'
 import { iceServers, SIGNALING_URL } from '../config/index'
+import { iceConfig } from '../utils/constants'
+// import { socket } from '../context/SocketProvider'
+// import { socket } from '../context/SocketProvider'
 
 let peerConnection: RTCPeerConnection | null;
-let ws: WebSocket | null
+let socket: WebSocket | null
 
-const Home = ({signaling_url} : {signaling_url: string}) => {
+
+export default function Home () {
   const [errMsg, setErrMsg] = useState("")
   const [selectedScreen, setSelectedScreen] = useState(0)
   const [screens, setScreens] = useState([])
   const [enabled, setEnabled] = useState(true)
   const [btnTitle, setBtnTitle] = useState("Start")
+  const [isStarted, setIsStarted] = useState(true)
+  // const socket = useSocket()
+
+  // const { socket } = useSocketConnetion(true)
 
   const remoteVideo = useRef<HTMLVideoElement>(null);
 
   const sendWSMsg = (data: WsMsg) => {
-    ws?.send(JSON.stringify(data))
+    console.log(socket)
+    socket?.send(JSON.stringify(data))
   }
 
   const currentScreenChange : ChangeEventHandler = (evt: ChangeEvent<HTMLSelectElement>) => {
@@ -76,6 +85,14 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
     : Promise<any> {
     return new Promise((accept: (value: any) => void, reject: (reason?: any) => void) => {
       pc.onicecandidate = (evt: RTCPeerConnectionIceEvent) => {
+        console.log(evt.candidate?.toJSON())
+        if (evt.candidate) {
+          sendWSMsg({
+            WSType: WSType.ICE,
+            ICE: evt.candidate.toJSON()
+            // ICE: JSON.stringify(evt.candidate.toJSON())
+          })
+        }
         if (!evt.candidate && pc.localDescription) {
           const { sdp: offer } = pc.localDescription
           accept(offer)
@@ -94,10 +111,7 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
     let pc : RTCPeerConnection;
 
     return Promise.resolve().then(() => {
-      pc = new RTCPeerConnection({
-        iceServers: iceServers
-      });
-      pc.connectionState
+      pc = new RTCPeerConnection(iceConfig);
       pc.ontrack = (evt) => {
         console.log("pc.ontrack() evt")
         console.log(evt)
@@ -134,55 +148,123 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
     }
   }
 
-  useEffect(() => {
-    function requestScreen() {
-      sendWSMsg({
-        WSType: WSType.SCREEN,
-        Screen: 0,
-        SDP: ""
-      })
-    }
+  function requestScreen() {
+    sendWSMsg({
+      WSType: WSType.SCREEN,
+      Screen: 0,
+      SDP: ""
+    })
+  }
 
-    ws = new WebSocket(signaling_url)
-
-    ws.onopen = (evt: Event) => {
-      console.log("ws connected")
-      requestScreen()
-    }
-
-    ws.onclose = (evt: CloseEvent) => {
-      console.log("ws disconnected")
-    }
-
-    ws.onmessage = (evt: MessageEvent<any>) => {
-      console.log(evt.data)
-      let received: WsMsg = JSON.parse(evt.data)
-      switch (received.WSType) {
-        case WSType.SCREEN:
-          console.log(received.Screen)
-          setScreens(received.Screen)
-          break
-        case WSType.SDP:
-          let answer = received.Answer
-          if (answer) {
-            receiveAnswer(answer)
-          }
-          break
-        case WSType.ERROR:
-          showError(received.Data)
-          break
-        default:
-          console.error(`unknown WSType: ${received.WSType}`)
+  const addSocketOpenHandler = () => {
+    if (socket) {
+      socket.onopen = () => {
+        sendWSMsg({
+          WSType: WSType.SCREEN,
+          Screen: "-1"
+        })
       }
     }
+  }
 
-    ws.onerror = (evt: Event) => {
-      console.log(evt)
+  const addSocketMessageHandlers = () => {
+    if (socket) {
+      socket.onmessage = async (evt: MessageEvent<any>) => {
+        let received: WsMsg = JSON.parse(evt.data)
+        console.log(received)
+        switch (received.WSType) {
+          case WSType.CONNECTED:
+            console.log("Recieved COnnected")
+            requestScreen()
+            break
+          case WSType.SCREEN:
+            console.log(received.Screen)
+            setScreens(received.Screen)
+            break
+          case WSType.SDP:
+            let answer = received.Answer
+            if (answer) {
+              await receiveAnswer(answer)
+            }
+            break
+          case WSType.ICE:
+            let ice = received.ICE || {}
+            console.log(ice)
+            console.log(peerConnection)
+            console.log(peerConnection !== null ? peerConnection.remoteDescription : null)
+            console.log(peerConnection && peerConnection.remoteDescription && peerConnection.remoteDescription.type)
+
+            // if (peerConnection && peerConnection.remoteDescription?.type) {
+            if (peerConnection) {
+              console.log("add icecandidate start")
+              await peerConnection.addIceCandidate(ice, () => {
+                console.log("success to create ice candidate")
+                console.log(peerConnection)
+              }, (reason: any) => {
+                console.log(peerConnection?.remoteDescription)
+                console.log("failed to create ice candidate")
+                console.log(reason)
+              })
+            }
+            // if (answer) {
+            //   await receiveAnswer(answer)
+            // }
+            break
+          case WSType.ERROR:
+            showError(received.Data)
+            break
+          default:
+            console.error(`unknown WSType: ${received.WSType}`)
+        }
+      }
     }
+  }
+
+  useEffect(() => {
+    socket = new WebSocket(process.env.NEXT_PUBLIC_WEBSOCKET_URL || '')
+    addSocketOpenHandler()
+    addSocketMessageHandlers()
+
+
+
+    // ws.onopen = (evt: Event) => {
+    //   console.log("ws connected")
+    //   requestScreen()
+    // }
+
+    // ws.onclose = (evt: CloseEvent) => {
+    //   console.log("ws disconnected")
+    // }
+
+    // ws.onmessage = (evt: MessageEvent<any>) => {
+    //   console.log(evt.data)
+    //   let received: WsMsg = JSON.parse(evt.data)
+    //   switch (received.WSType) {
+    //     case WSType.SCREEN:
+    //       console.log(received.Screen)
+    //       setScreens(received.Screen)
+    //       break
+    //     case WSType.SDP:
+    //       let answer = received.Answer
+    //       if (answer) {
+    //         receiveAnswer(answer)
+    //       }
+    //       break
+    //     case WSType.ERROR:
+    //       showError(received.Data)
+    //       break
+    //     default:
+    //       console.error(`unknown WSType: ${received.WSType}`)
+    //   }
+    // }
+
+    // ws.onerror = (evt: Event) => {
+    //   console.log(evt)
+    // }
 
     return function cleanup() {
-      if (ws) {
-        ws.close()
+      if (socket) {
+        socket.close()
       }
       if (peerConnection) {
         peerConnection.close()
@@ -249,14 +331,3 @@ const Home = ({signaling_url} : {signaling_url: string}) => {
     </div>
   )
 }
-
-export const getStaticProps: GetStaticProps = async (context) => {
-  console.log(`signaling server: ${process.env.SIGNALING_SERVER}`)
-  return { props: { signaling_url:  process.env.SIGNALING_SERVER ? process.env.SIGNALING_SERVER : ""}}
-}
-
-// export async function getStaticProps() {
-//   // console.log(`env: ${process.env.SIGNALING_SERVER}`)
-// }
-
-export default Home

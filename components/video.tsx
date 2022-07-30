@@ -1,20 +1,29 @@
-import { RefObject, useEffect, useRef } from "react";
-import adapter from "webrtc-adapter";
+import { useEffect, useRef } from "react";
+import styles from '../styles/Home.module.css'
 import type { Peer } from "../types";
 
-// let peerConnection: RTCPeerConnection | null;
-
-export default function Video({ peer } : { peer : Peer }) {
-  const vRef: RefObject<HTMLVideoElement> = useRef<HTMLVideoElement>(null)
+export default function Video({ peer, userName } : { peer: Peer, userName: string }) {
+  const vRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (vRef.current) {
-      vRef.current.srcObject = peer.stream
+    if (vRef.current && peer.stream) {
+      vRef.current.srcObject = peer.stream;
+      vRef.current.play();
     }
-  }, [peer])
-
-  return (
-    <video>
-    </video>
-  )
-
+  }, [peer]);
+  return peer && peer.stream ? (
+    <article
+      className="w-full h-full bg-black rounded-lg shadow-md remote-video"
+      data-username={userName}
+    >
+      <video
+        ref={vRef}
+        className={styles.remoteVideo}
+        autoPlay
+        muted
+        playsInline
+        loop
+      >
+      </video>
+    </article>
+  ) : null;
 }

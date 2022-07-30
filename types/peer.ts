@@ -1,3 +1,5 @@
 export interface Peer {
-  stream: MediaStream
+  stream?: MediaStream,
+  peerConnection: RTCPeerConnection,
+  iceQueue? : RTCIceCandidateInit[]
 }
