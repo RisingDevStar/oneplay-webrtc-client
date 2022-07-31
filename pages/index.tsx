@@ -88,11 +88,10 @@ export default function Home () {
   }
 
   const sendWebRTCMsg = (peer: Peer) => (data: any) => {
-    console.log(data)
     let sendChannel = peer.sendChannel
-    console.log(sendChannel)
     if (sendChannel) {
       console.log("send via data channel")
+      console.log(data)
       if (sendChannel.readyState === 'open') {
         sendChannel.send(JSON.stringify(data))
       }
