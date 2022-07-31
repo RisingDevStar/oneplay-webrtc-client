@@ -21,3 +21,6 @@ export const MOUSE_WHELL = 'wheel'
 export const KEY_PRESS = 'keypress'
 export const KEY_DOWN = 'keydown'
 export const KEY_UP = 'keyup'
+
+export const GAMEPAD_CONNECTED = 'gamepadconnected'
+export const GAMEPAD_DISCONNECTED = 'gamepadconnected'

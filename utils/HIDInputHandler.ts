@@ -1,10 +1,10 @@
-export const mouseEventHandler = (element: HTMLVideoElement, inputType: string) => (ev: MouseEvent) => {
+export const mouseEventHandler = (element: HTMLVideoElement, inputType: string, callback: (data: any) => void) => (ev: MouseEvent) => {
   // console.log(element.clientWidth, element.clientHeight)
   const width = element.clientWidth
   const height = element.clientHeight
   // if (MouseEvent) {
   // }
-  console.log({
+  const data = {
     inputType: inputType,
     altKey: ev.altKey,
     button: ev.button,
@@ -16,21 +16,25 @@ export const mouseEventHandler = (element: HTMLVideoElement, inputType: string) 
     offsetX: ev.offsetX / width,
     offsetY: ev.offsetY / height,
     shiftKey: ev.shiftKey,
-  })
+  }
+  // console.log()
+
+  callback(data)
 }
 
-export const wheelEventHandler = (element: HTMLVideoElement, inputType: string) => (ev: WheelEvent) => {
-  console.log({
+export const wheelEventHandler = (element: HTMLVideoElement, inputType: string, callback: (data: any) => void) => (ev: WheelEvent) => {
+  const data = {
     inputType: inputType,
     deltaX: ev.deltaX,
     deltaY: ev.deltaY,
     deltaZ: ev.deltaZ,
     deltaMode: ev.deltaMode,
-  })
+  }
+  callback(data)
 }
 
-export const keyBoardEventHandler = (element: HTMLVideoElement, inputType: string) => (ev: KeyboardEvent) => {
-  console.log({
+export const keyBoardEventHandler = (element: HTMLVideoElement, inputType: string, callback: (data: any) => void) => (ev: KeyboardEvent) => {
+  const data = {
     inputType: inputType,
     altKey: ev.altKey,
     code: ev.code,
@@ -40,7 +44,8 @@ export const keyBoardEventHandler = (element: HTMLVideoElement, inputType: strin
     metaKey: ev.metaKey,
     repeat: ev.repeat,
     shiftKey: ev.shiftKey
-  })
+  }
+  callback(data)
 }
 
 // const gamepads: Gamepad[] = []
