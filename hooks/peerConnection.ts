@@ -7,10 +7,10 @@ export default function usePeerConnection(isStarted: boolean) {
   const [state, setState] = useState<Peer | undefined>(undefined);
   useEffect(() => {
     const newPeerConnection = new RTCPeerConnection(iceConfig)
-    const sendChannel = newPeerConnection.createDataChannel("sendChannel")
+    // const sendChannel = newPeerConnection.createDataChannel("sendChannel")
     setState({
       peerConnection: newPeerConnection,
-      sendChannel: sendChannel,
+      sendChannel: undefined,
       iceQueue: []
     })
 
