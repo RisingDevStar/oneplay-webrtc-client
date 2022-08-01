@@ -10,7 +10,7 @@ export default function usePeerConnection(isStarted: boolean) {
     // const sendChannel = newPeerConnection.createDataChannel("sendChannel")
     setState({
       peerConnection: newPeerConnection,
-      sendChannel: undefined,
+      // sendChannel: undefined,
       iceQueue: []
     })
 

@@ -87,16 +87,16 @@ export default function Home () {
     }
   }
 
-  const sendWebRTCMsg = (peer: Peer) => (data: any) => {
-    let sendChannel = peer.sendChannel
-    if (sendChannel) {
-      console.log("send via data channel")
-      console.log(data)
-      if (sendChannel.readyState === 'open') {
-        sendChannel.send(JSON.stringify(data))
-      }
-    }
-  }
+  // const sendWebRTCMsg = (peer: Peer) => (data: any) => {
+  //   let sendChannel = peer.sendChannel
+  //   if (sendChannel) {
+  //     console.log("send via data channel")
+  //     console.log(data)
+  //     if (sendChannel.readyState === 'open') {
+  //       sendChannel.send(JSON.stringify(data))
+  //     }
+  //   }
+  // }
 
   const currentScreenChange : ChangeEventHandler = (evt: ChangeEvent<HTMLSelectElement>) => {
     let value : number = parseInt(evt.currentTarget.value, 10)
@@ -371,43 +371,43 @@ export default function Home () {
   //   sendChannel.onopen()
   // }
 
-  const addHIDhandler = (element: HTMLVideoElement) => {
-    // Mouse event
-    if (peer) {
-      element.addEventListener(MOUSE_CLICK, mouseEventHandler(element, MOUSE_CLICK, sendWebRTCMsg(peer)))
-      element.addEventListener(MOUSE_DOUBLECLICK, mouseEventHandler(element, MOUSE_DOUBLECLICK, sendWebRTCMsg(peer)))
-      element.addEventListener(MOUSE_UP, mouseEventHandler(element, MOUSE_UP, sendWebRTCMsg(peer)))
-      element.addEventListener(MOUSE_DOWN, mouseEventHandler(element, MOUSE_DOWN, sendWebRTCMsg(peer)))
-      element.addEventListener(MOUSE_MOVE, mouseEventHandler(element, MOUSE_MOVE, sendWebRTCMsg(peer)))
-      // Mouse wheel event
-      element.addEventListener(MOUSE_WHELL, wheelEventHandler(element, MOUSE_WHELL, sendWebRTCMsg(peer)))
-      // Keyboard event
-      document.addEventListener(KEY_PRESS, keyBoardEventHandler(element, KEY_PRESS, sendWebRTCMsg(peer)))
-      document.addEventListener(KEY_DOWN, keyBoardEventHandler(element, KEY_DOWN, sendWebRTCMsg(peer)))
-      document.addEventListener(KEY_UP, keyBoardEventHandler(element, KEY_UP, sendWebRTCMsg(peer)))
-      // Gamepad event
-      // window.addEventListener('gamepadconnected', gamepadHandler())
-      // window.addEventListener('gamepaddisconnected', )
-    }
-  }
+  // const addHIDhandler = (element: HTMLVideoElement) => {
+  //   // Mouse event
+  //   if (peer) {
+  //     element.addEventListener(MOUSE_CLICK, mouseEventHandler(element, MOUSE_CLICK, sendWebRTCMsg(peer)))
+  //     element.addEventListener(MOUSE_DOUBLECLICK, mouseEventHandler(element, MOUSE_DOUBLECLICK, sendWebRTCMsg(peer)))
+  //     element.addEventListener(MOUSE_UP, mouseEventHandler(element, MOUSE_UP, sendWebRTCMsg(peer)))
+  //     element.addEventListener(MOUSE_DOWN, mouseEventHandler(element, MOUSE_DOWN, sendWebRTCMsg(peer)))
+  //     element.addEventListener(MOUSE_MOVE, mouseEventHandler(element, MOUSE_MOVE, sendWebRTCMsg(peer)))
+  //     // Mouse wheel event
+  //     element.addEventListener(MOUSE_WHELL, wheelEventHandler(element, MOUSE_WHELL, sendWebRTCMsg(peer)))
+  //     // Keyboard event
+  //     document.addEventListener(KEY_PRESS, keyBoardEventHandler(element, KEY_PRESS, sendWebRTCMsg(peer)))
+  //     document.addEventListener(KEY_DOWN, keyBoardEventHandler(element, KEY_DOWN, sendWebRTCMsg(peer)))
+  //     document.addEventListener(KEY_UP, keyBoardEventHandler(element, KEY_UP, sendWebRTCMsg(peer)))
+  //     // Gamepad event
+  //     // window.addEventListener('gamepadconnected', gamepadHandler())
+  //     // window.addEventListener('gamepaddisconnected', )
+  //   }
+  // }
 
-  const removeHIDhandler = (element: HTMLVideoElement) => {
-    if (peer) {
+  // const removeHIDhandler = (element: HTMLVideoElement) => {
+  //   if (peer) {
 
-      // Mouse event
-      element.removeEventListener(MOUSE_CLICK, mouseEventHandler(element, MOUSE_CLICK, sendWebRTCMsg(peer)))
-      element.removeEventListener(MOUSE_DOUBLECLICK, mouseEventHandler(element, MOUSE_DOUBLECLICK, sendWebRTCMsg(peer)))
-      element.removeEventListener(MOUSE_UP, mouseEventHandler(element, MOUSE_UP, sendWebRTCMsg(peer)))
-      element.removeEventListener(MOUSE_DOWN, mouseEventHandler(element, MOUSE_DOWN, sendWebRTCMsg(peer)))
-      element.removeEventListener(MOUSE_MOVE, mouseEventHandler(element, MOUSE_MOVE, sendWebRTCMsg(peer)))
-      // Mouse wheel event
-      element.removeEventListener(MOUSE_WHELL, wheelEventHandler(element, MOUSE_WHELL, sendWebRTCMsg(peer)))
-      // Keyboard event
-      document.removeEventListener(KEY_PRESS, keyBoardEventHandler(element, KEY_PRESS, sendWebRTCMsg(peer)))
-      document.removeEventListener(KEY_DOWN, keyBoardEventHandler(element, KEY_DOWN, sendWebRTCMsg(peer)))
-      document.removeEventListener(KEY_UP, keyBoardEventHandler(element, KEY_UP, sendWebRTCMsg(peer)))
-    }
-  }
+  //     // Mouse event
+  //     element.removeEventListener(MOUSE_CLICK, mouseEventHandler(element, MOUSE_CLICK, sendWebRTCMsg(peer)))
+  //     element.removeEventListener(MOUSE_DOUBLECLICK, mouseEventHandler(element, MOUSE_DOUBLECLICK, sendWebRTCMsg(peer)))
+  //     element.removeEventListener(MOUSE_UP, mouseEventHandler(element, MOUSE_UP, sendWebRTCMsg(peer)))
+  //     element.removeEventListener(MOUSE_DOWN, mouseEventHandler(element, MOUSE_DOWN, sendWebRTCMsg(peer)))
+  //     element.removeEventListener(MOUSE_MOVE, mouseEventHandler(element, MOUSE_MOVE, sendWebRTCMsg(peer)))
+  //     // Mouse wheel event
+  //     element.removeEventListener(MOUSE_WHELL, wheelEventHandler(element, MOUSE_WHELL, sendWebRTCMsg(peer)))
+  //     // Keyboard event
+  //     document.removeEventListener(KEY_PRESS, keyBoardEventHandler(element, KEY_PRESS, sendWebRTCMsg(peer)))
+  //     document.removeEventListener(KEY_DOWN, keyBoardEventHandler(element, KEY_DOWN, sendWebRTCMsg(peer)))
+  //     document.removeEventListener(KEY_UP, keyBoardEventHandler(element, KEY_UP, sendWebRTCMsg(peer)))
+  //   }
+  // }
 
   const addDataChannelHandler = (peer: Peer) => {
     const sendChannel = peer.sendChannel
@@ -433,10 +433,10 @@ export default function Home () {
   }, [socket])
 
   useEffect(() => {
-    const videoEle = remoteVideo.current
-    if (videoEle) {
-      addHIDhandler(videoEle)
-    }
+    // const videoEle = remoteVideo.current
+    // if (videoEle) {
+    //   addHIDhandler(videoEle)
+    // }
 
     if (peer) {
       addIceCandidateHandler(peer)
@@ -444,9 +444,9 @@ export default function Home () {
       addDataChannelHandler(peer)
     }
     return function cleanup() {
-      if (videoEle) {
-        removeHIDhandler(videoEle)
-      }
+      // if (videoEle) {
+      //   removeHIDhandler(videoEle)
+      // }
     };
   }, [peer])
 
