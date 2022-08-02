@@ -352,6 +352,12 @@ export default function Home () {
 
           debug(DebugType.INFO, 'Stream added to video')
           console.log(evt.streams[0].getVideoTracks())
+          evt.streams[0].onremovetrack = (ev: MediaStreamTrackEvent) => {
+            debug(DebugType.ERROR, "mediastream removed", ev)
+          }
+          evt.streams[0].getVideoTracks()[0].addEventListener('ended', () => {
+            debug(DebugType.ERROR, "video mediastream ended")
+          })
           remoteVideo.current.srcObject = evt.streams[0]
           remoteVideo.current.play().then(() => {
             console.log("Success to play video")
