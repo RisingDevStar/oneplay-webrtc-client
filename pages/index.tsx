@@ -89,13 +89,13 @@ export default function Home () {
 
   const sendWebRTCMsg = (peer: Peer) => (data: any) => {
     let sendChannel = peer.sendChannel
-    // if (sendChannel) {
-    //   console.log("send via data channel")
-    //   console.log(data)
-    //   if (sendChannel.readyState === 'open') {
-    //     sendChannel.send(JSON.stringify(data))
-    //   }
-    // }
+    if (sendChannel) {
+      console.log("send via data channel")
+      console.log(data)
+      if (sendChannel.readyState === 'open') {
+        sendChannel.send(JSON.stringify(data))
+      }
+    }
   }
 
   const currentScreenChange : ChangeEventHandler = (evt: ChangeEvent<HTMLSelectElement>) => {
